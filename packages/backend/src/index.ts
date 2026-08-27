@@ -1,0 +1,85 @@
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { createServer } from 'node:http';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { authRouter, gameRouter, botRouter } from './routes/index.js';
+import { errorHandler } from './middleware/validate.js';
+import { setupWebSocket } from './ws/index.js';
+import { migrate } from './db/migrate.js';
+import { checkDatabase } from './db/client.js';
+import { APP_VERSION } from '@vcc/shared';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const startTime = Date.now();
+
+migrate();
+
+const app = express();
+const port = parseInt(process.env.PORT ?? '3001', 10);
+const host = process.env.HOST ?? '0.0.0.0';
+
+app.use(helmet({
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+}));
+app.use(cors({
+  origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+  credentials: true,
+}));
+app.use(express.json({ limit: '1mb' }));
+
+const limiter = rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? '900000', 10),
+  max: parseInt(process.env.RATE_LIMIT_MAX ?? '100', 10),
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', limiter);
+
+app.get('/health', (_req, res) => {
+  const dbOk = checkDatabase();
+  res.status(dbOk ? 200 : 503).json({
+    status: dbOk ? 'ok' : 'degraded',
+    version: APP_VERSION,
+    uptime: Math.floor((Date.now() - startTime) / 1000),
+    checks: { database: dbOk },
+  });
+});
+
+app.get('/ready', (_req, res) => {
+  if (checkDatabase()) {
+    res.json({ ready: true });
+  } else {
+    res.status(503).json({ ready: false });
+  }
+});
+
+app.use('/api/auth', authRouter);
+app.use('/api/game', gameRouter);
+app.use('/api/bot', botRouter);
+
+const frontendDist = path.resolve(__dirname, '../../frontend/dist');
+app.use(express.static(frontendDist));
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/health') || req.path.startsWith('/ready')) {
+    next();
+    return;
+  }
+  res.sendFile(path.join(frontendDist, 'index.html'), (err) => {
+    if (err) next();
+  });
+});
+
+app.use(errorHandler);
+
+const httpServer = createServer(app);
+setupWebSocket(httpServer);
+
+httpServer.listen(port, host, () => {
+  console.log(`VCC backend running on http://${host}:${port}`);
+});
+
+export { app, httpServer };

@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-vcc-bg text-vcc-text font-body antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 bg-gradient-to-r from-vcc-gold to-amber-500 text-vcc-bg font-semibold rounded-lg
+           hover:from-amber-400 hover:to-vcc-gold transition-all duration-200 transform hover:scale-105
+           active:scale-95 shadow-lg shadow-vcc-gold/20;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 bg-vcc-card border border-vcc-border text-vcc-text font-medium rounded-lg
+           hover:bg-vcc-surface hover:border-vcc-gold/50 transition-all duration-200;
+  }
+
+  .card-surface {
+    @apply bg-vcc-card border border-vcc-border rounded-xl p-6 shadow-xl;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-vcc-surface border border-vcc-border rounded-lg text-vcc-text
+           placeholder-vcc-muted focus:outline-none focus:border-vcc-gold focus:ring-1 focus:ring-vcc-gold/50
+           transition-colors;
+  }
+}

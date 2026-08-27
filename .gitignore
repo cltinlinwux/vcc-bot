@@ -19,6 +19,12 @@ build/
 *.log
 .cache/
 
+# Database
+packages/backend/data/
+*.db
+*.db-shm
+*.db-wal
+
 # OS & editor
 .DS_Store
 Thumbs.db

@@ -1,0 +1,26 @@
+{
+  "name": "vcc-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VCC — Virtual Card Combat. Online card battle game with Discord bot companion.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "dev": "concurrently -n backend,frontend,bot -c blue,green,magenta \"npm run dev -w @vcc/backend\" \"npm run dev -w @vcc/frontend\" \"npm run dev -w @vcc/bot\"",
+    "test": "npm run test --workspaces --if-present",
+    "test:all": "bash scripts/test-all.sh",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:migrate": "npm run db:migrate -w @vcc/backend",
+    "db:seed": "npm run db:seed -w @vcc/backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

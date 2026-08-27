@@ -1,0 +1,17 @@
+services:
+  vcc:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - JWT_SECRET=${JWT_SECRET:-production-change-this-secret}
+      - DATABASE_URL=file:./data/vcc.db
+      - CORS_ORIGIN=http://localhost:3001
+    volumes:
+      - vcc-data:/app/packages/backend/data
+    restart: unless-stopped
+
+volumes:
+  vcc-data:
