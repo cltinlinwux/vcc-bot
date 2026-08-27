@@ -6,21 +6,20 @@ import { toPlayerMatchState } from '@vcc/shared';
 import {
   joinQueue,
   leaveQueue,
-  getMatch,
   getPlayerMatch,
   performAction,
   onMatchFound,
 } from '../services/match.service.js';
-import type { GameAction } from '@vcc/shared';
+import type { GameAction, InternalMatchState } from '@vcc/shared';
 
 function userRoom(userId: string): string {
   return `user:${userId}`;
 }
 
-function emitMatchToPlayers(io: Server, matchId: string): void {
-  const internal = getMatch(matchId);
-  if (!internal) return;
-
+// Takes the state directly rather than re-fetching by id: a match-ending
+// action removes the match from the active map before this runs, so a lookup
+// would miss the final state and players would never see the result.
+function emitMatchToPlayers(io: Server, internal: InternalMatchState): void {
   for (const player of internal.players) {
     const state = toPlayerMatchState(internal, player.userId);
     io.to(userRoom(player.userId)).emit(WS_EVENTS.MATCH_STATE, state);
@@ -96,8 +95,8 @@ export function setupWebSocket(httpServer: HttpServer): Server {
 
     socket.on(WS_EVENTS.MATCH_ACTION, (payload: { matchId: string; action: GameAction }) => {
       try {
-        performAction(payload.matchId, userId, payload.action);
-        emitMatchToPlayers(io, payload.matchId);
+        const state = performAction(payload.matchId, userId, payload.action);
+        emitMatchToPlayers(io, state);
       } catch (err) {
         socket.emit(WS_EVENTS.ERROR, { message: (err as Error).message });
       }

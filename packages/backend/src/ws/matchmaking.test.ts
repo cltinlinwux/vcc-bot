@@ -70,7 +70,9 @@ function connectSocket(token: string): Promise<ClientSocket> {
   });
 }
 
-function waitForEvent<T>(socket: ClientSocket, event: string, timeoutMs = 5000): Promise<T> {
+// Generous timeout: backend test files run in parallel processes, so a busy
+// machine can delay socket events well past what a quiet run would need.
+function waitForEvent<T>(socket: ClientSocket, event: string, timeoutMs = 15000): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(
       () => reject(new Error(`Timed out waiting for "${event}"`)),
@@ -170,6 +172,86 @@ test('WS first, REST second: REST join triggers match and notifies both sockets'
   assert.equal(m1.matchId, m2.matchId);
   assert.equal(m1.matchId, restResult.matchId);
   assert.equal(getQueueSize(), 0);
+});
+
+interface CardView {
+  instanceId: string;
+  cost: number;
+  attack: number;
+}
+
+interface StateView {
+  id: string;
+  status: string;
+  currentTurn: number;
+  winnerId: string | null;
+  players: {
+    userId: string;
+    health: number;
+    mana: number;
+    field: CardView[];
+    hand?: CardView[];
+  }[];
+}
+
+test('playing a match to completion broadcasts final state and MATCH_RESULT to both players', async () => {
+  const p1 = await registerUser('finisher1');
+  const p2 = await registerUser('finisher2');
+  const s1 = await connectSocket(p1.token);
+  const s2 = await connectSocket(p2.token);
+
+  const queuedAck = waitForEvent<{ queued: boolean }>(s1, WS_EVENTS.QUEUE_JOIN);
+  s1.emit(WS_EVENTS.QUEUE_JOIN);
+  await queuedAck;
+
+  const matched1 = waitForEvent<{ matchId: string; state: StateView }>(s1, WS_EVENTS.QUEUE_MATCHED);
+  const matched2 = waitForEvent<{ matchId: string; state: StateView }>(s2, WS_EVENTS.QUEUE_MATCHED);
+  s2.emit(WS_EVENTS.QUEUE_JOIN);
+  const [m1, m2] = await Promise.all([matched1, matched2]);
+  const matchId = m1.matchId;
+
+  const result1 = waitForEvent<StateView>(s1, WS_EVENTS.MATCH_RESULT, 30000);
+  const result2 = waitForEvent<StateView>(s2, WS_EVENTS.MATCH_RESULT, 30000);
+
+  // Each player only sees their own hand, so track both views and always act
+  // from the current player's view. Strategy: attack face whenever possible,
+  // otherwise play an affordable card, otherwise end the turn.
+  let view1 = m1.state;
+  let view2 = m2.state;
+
+  for (let safety = 0; safety < 400 && view1.status === 'active'; safety += 1) {
+    const currentId = view1.players[view1.currentTurn].userId;
+    const isP1Turn = currentId === p1.userId;
+    const actorSocket = isP1Turn ? s1 : s2;
+    const actorView = isP1Turn ? view1 : view2;
+    const me = actorView.players.find((p) => p.userId === currentId)!;
+
+    const attacker = me.field.find((c) => c.attack > 0);
+    const playable = (me.hand ?? []).find((c) => c.cost <= me.mana);
+
+    let action: Record<string, unknown>;
+    if (attacker) {
+      action = { type: 'attack', attackerInstanceId: attacker.instanceId };
+    } else if (playable && me.field.length < 5) {
+      action = { type: 'play_card', cardInstanceId: playable.instanceId };
+    } else {
+      action = { type: 'end_turn' };
+    }
+
+    const next1 = waitForEvent<StateView>(s1, WS_EVENTS.MATCH_STATE);
+    const next2 = waitForEvent<StateView>(s2, WS_EVENTS.MATCH_STATE);
+    actorSocket.emit(WS_EVENTS.MATCH_ACTION, { matchId, action });
+    [view1, view2] = await Promise.all([next1, next2]);
+  }
+
+  assert.equal(view1.status, 'finished', 'match should finish within the safety limit');
+  assert.equal(view2.status, 'finished', 'both players should see the final state');
+
+  const [r1, r2] = await Promise.all([result1, result2]);
+  assert.equal(r1.status, 'finished');
+  assert.equal(r2.status, 'finished');
+  assert.ok(r1.winnerId, 'result should record a winner');
+  assert.equal(r1.winnerId, r2.winnerId);
 });
 
 test('REST + REST: both players notified via sockets without any WS queue join', async () => {
