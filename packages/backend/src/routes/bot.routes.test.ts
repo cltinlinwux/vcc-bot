@@ -125,3 +125,42 @@ describe('POST /api/bot/queue/join', () => {
     assert.equal(secondBody.data.state.status, 'active');
   });
 });
+
+describe('POST /api/bot/unlink', () => {
+  async function unlinkRequest(body: unknown): Promise<Response> {
+    return fetch(`${baseUrl}/api/bot/unlink`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
+  it('rejects an invalid body', async () => {
+    const res = await unlinkRequest({ platform: 'slack', platformUserId: '' });
+    assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.equal(body.code, 'VALIDATION_ERROR');
+  });
+
+  it('returns 404 for an unlinked platform user', async () => {
+    const res = await unlinkRequest({ platform: 'discord', platformUserId: 'never-linked-user' });
+    assert.equal(res.status, 404);
+    const body = await res.json();
+    assert.equal(body.code, 'NOT_LINKED');
+  });
+
+  it('removes an existing link', async () => {
+    createLinkedUser('unlink', 'discord-unlink-1');
+
+    const res = await unlinkRequest({ platform: 'discord', platformUserId: 'discord-unlink-1' });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.data.unlinked, true);
+
+    // The user is gone from bot lookups and can be unlinked only once.
+    const stats = await fetch(`${baseUrl}/api/bot/user/discord/discord-unlink-1`);
+    assert.equal(stats.status, 404);
+    const again = await unlinkRequest({ platform: 'discord', platformUserId: 'discord-unlink-1' });
+    assert.equal(again.status, 404);
+  });
+});

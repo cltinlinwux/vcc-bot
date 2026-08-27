@@ -41,3 +41,8 @@ export const botQueueJoinSchema = z.object({
   platform: z.enum(['discord', 'telegram']),
   platformUserId: z.string().min(1),
 });
+
+export const botUnlinkSchema = z.object({
+  platform: z.enum(['discord', 'telegram']),
+  platformUserId: z.string().min(1),
+});

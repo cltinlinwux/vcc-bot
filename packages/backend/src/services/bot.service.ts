@@ -82,6 +82,14 @@ export function findBotLink(platform: 'discord' | 'telegram', platformUserId: st
   };
 }
 
+export function unlinkBotAccount(platform: 'discord' | 'telegram', platformUserId: string): boolean {
+  const result = db.prepare('DELETE FROM bot_links WHERE platform = ? AND platform_user_id = ?').run(
+    platform,
+    platformUserId,
+  );
+  return result.changes > 0;
+}
+
 export function getUserBotLinks(userId: string): BotLink[] {
   const rows = db.prepare('SELECT * FROM bot_links WHERE user_id = ?').all(userId) as {
     id: string;

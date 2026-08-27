@@ -1,8 +1,16 @@
 import { Router } from 'express';
-import { authMiddleware } from '../middleware/auth.js';
+export { healthRouter } from './health.js';
+import { authMiddleware, botServiceAuth } from '../middleware/auth.js';
 import { validateBody } from '../middleware/validate.js';
 import { linkCodeLimiter } from '../middleware/rateLimits.js';
-import { registerSchema, loginSchema, createDeckSchema, linkBotSchema, botQueueJoinSchema } from '../schemas/index.js';
+import {
+  registerSchema,
+  loginSchema,
+  createDeckSchema,
+  linkBotSchema,
+  botQueueJoinSchema,
+  botUnlinkSchema,
+} from '../schemas/index.js';
 import {
   createUser,
   findUserByEmail,
@@ -15,7 +23,7 @@ import {
 import { signToken } from '../middleware/auth.js';
 import { createDeck, createStarterDeck, getUserDecks } from '../services/deck.service.js';
 import { joinQueue, leaveQueue, getMatchHistory } from '../services/match.service.js';
-import { generateLinkCode, linkBotAccount, getUserBotLinks, findBotLink } from '../services/bot.service.js';
+import { generateLinkCode, linkBotAccount, getUserBotLinks, findBotLink, unlinkBotAccount } from '../services/bot.service.js';
 import { getStarterDeck, CARD_DEFINITIONS } from '@vcc/shared';
 
 export const authRouter = Router();
@@ -115,10 +123,19 @@ gameRouter.get('/history', authMiddleware, (req, res) => {
 
 export const botRouter = Router();
 
+// User-facing routes, authenticated with the web app's user JWT.
 botRouter.post('/link-code', authMiddleware, (req, res) => {
   const code = generateLinkCode(req.auth!.userId);
   res.json({ data: { code, expiresInMinutes: 15 } });
 });
+
+botRouter.get('/links', authMiddleware, (req, res) => {
+  res.json({ data: getUserBotLinks(req.auth!.userId) });
+});
+
+// Every route below is called by the bot process and requires the shared
+// BOT_SERVICE_TOKEN in production (open in dev/test for local testing).
+botRouter.use(botServiceAuth);
 
 botRouter.post('/link', linkCodeLimiter, validateBody(linkBotSchema), (req, res) => {
   try {
@@ -129,8 +146,13 @@ botRouter.post('/link', linkCodeLimiter, validateBody(linkBotSchema), (req, res)
   }
 });
 
-botRouter.get('/links', authMiddleware, (req, res) => {
-  res.json({ data: getUserBotLinks(req.auth!.userId) });
+botRouter.post('/unlink', validateBody(botUnlinkSchema), (req, res) => {
+  const removed = unlinkBotAccount(req.body.platform, req.body.platformUserId);
+  if (!removed) {
+    res.status(404).json({ error: 'No linked account for this platform user', code: 'NOT_LINKED' });
+    return;
+  }
+  res.json({ data: { unlinked: true } });
 });
 
 const BOT_PLATFORMS = ['discord', 'telegram'] as const;

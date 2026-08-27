@@ -20,6 +20,7 @@ export const WS_EVENTS = {
 export const BOT_COMMANDS = {
   START: 'start',
   LINK: 'link',
+  UNLINK: 'unlink',
   PLAY: 'play',
   DECK: 'deck',
   STATS: 'stats',

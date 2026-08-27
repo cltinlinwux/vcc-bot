@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import type { Request, Response, NextFunction } from 'express';
 
 export interface AuthPayload {
@@ -60,6 +61,38 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
   } catch {
     res.status(401).json({ error: 'Invalid or expired token', code: 'AUTH_INVALID' });
   }
+}
+
+function secretsMatch(a: string, b: string): boolean {
+  // Hashing first gives equal-length buffers so the comparison stays timing-safe.
+  return timingSafeEqual(createHash('sha256').update(a).digest(), createHash('sha256').update(b).digest());
+}
+
+/**
+ * Guards bot-service endpoints (called by the Discord/Telegram bot process,
+ * not by browsers). In production the bot must present
+ * `Authorization: Bearer $BOT_SERVICE_TOKEN`; in dev/test requests pass
+ * through so the API can be exercised locally without a token.
+ */
+export function botServiceAuth(req: Request, res: Response, next: NextFunction): void {
+  if (process.env.NODE_ENV !== 'production') {
+    next();
+    return;
+  }
+
+  const serviceToken = process.env.BOT_SERVICE_TOKEN;
+  if (!serviceToken) {
+    res.status(503).json({ error: 'Bot service token not configured', code: 'BOT_AUTH_UNCONFIGURED' });
+    return;
+  }
+
+  const header = req.headers.authorization;
+  if (!header?.startsWith('Bearer ') || !secretsMatch(header.slice(7), serviceToken)) {
+    res.status(401).json({ error: 'Invalid bot service token', code: 'BOT_AUTH_INVALID' });
+    return;
+  }
+
+  next();
 }
 
 export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {

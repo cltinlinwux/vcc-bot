@@ -16,9 +16,15 @@ type ApiResult<T> = { ok: true; data: T } | { ok: false; code: string; error: st
 
 async function apiCall<T>(path: string, options: { method?: string; body?: unknown } = {}): Promise<ApiResult<T>> {
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    // Read at call time so the token can be set/rotated without a rebuild.
+    // Required by the backend in production; optional in dev/test.
+    const serviceToken = process.env.BOT_SERVICE_TOKEN;
+    if (serviceToken) headers.Authorization = `Bearer ${serviceToken}`;
+
     const res = await fetch(`${API_URL}${path}`, {
       method: options.method ?? 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: options.body ? JSON.stringify(options.body) : undefined,
     });
     const json = (await res.json().catch(() => null)) as { data?: T; error?: string; code?: string } | null;
@@ -37,6 +43,7 @@ const commands = [
     .setName(BOT_COMMANDS.LINK)
     .setDescription('Link your VCC account')
     .addStringOption((o) => o.setName('code').setDescription('8-character link code from profile').setRequired(true)),
+  new SlashCommandBuilder().setName(BOT_COMMANDS.UNLINK).setDescription('Unlink your VCC account from Discord'),
   new SlashCommandBuilder().setName(BOT_COMMANDS.PLAY).setDescription('Join matchmaking queue'),
   new SlashCommandBuilder().setName(BOT_COMMANDS.STATS).setDescription('View your stats'),
   new SlashCommandBuilder().setName(BOT_COMMANDS.LEADERBOARD).setDescription('View top players'),
@@ -60,6 +67,27 @@ async function handleLink(interaction: ChatInputCommandInteraction): Promise<voi
   } else {
     await interaction.reply({ content: 'Link failed. Check your code and try again.', ephemeral: true });
   }
+}
+
+export async function handleUnlink(interaction: ChatInputCommandInteraction): Promise<void> {
+  const result = await apiCall<{ unlinked: boolean }>('/api/bot/unlink', {
+    method: 'POST',
+    body: { platform: 'discord', platformUserId: interaction.user.id },
+  });
+
+  if (result.ok) {
+    await interaction.reply({
+      content: 'Your Discord account has been unlinked. Use /link with a new code from your profile to link again.',
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const content =
+    result.code === 'NOT_LINKED'
+      ? 'Your Discord account is not linked, so there is nothing to unlink.'
+      : `Could not unlink: ${result.error}`;
+  await interaction.reply({ content, ephemeral: true });
 }
 
 export async function handlePlay(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -153,6 +181,7 @@ async function handleHelp(interaction: ChatInputCommandInteraction): Promise<voi
     .setColor(0x3b82f6)
     .addFields(
       { name: '/link <code>', value: 'Link your web account (get code from profile page)' },
+      { name: '/unlink', value: 'Remove the link between Discord and your web account' },
       { name: '/play', value: 'Join matchmaking (requires linked account)' },
       { name: '/stats', value: 'View your rating and record' },
       { name: '/leaderboard', value: 'Top 10 players' },
@@ -183,6 +212,9 @@ export async function startBot(): Promise<void> {
         break;
       case BOT_COMMANDS.LINK:
         await handleLink(interaction);
+        break;
+      case BOT_COMMANDS.UNLINK:
+        await handleUnlink(interaction);
         break;
       case BOT_COMMANDS.PLAY:
         await handlePlay(interaction);
