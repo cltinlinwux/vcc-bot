@@ -5,6 +5,7 @@ import { APP_FULL_NAME } from '@vcc/shared';
 const navLinks = [
   { to: '/', label: 'Home' },
   { to: '/play', label: 'Play' },
+  { to: '/decks', label: 'Decks' },
   { to: '/cards', label: 'Cards' },
   { to: '/leaderboard', label: 'Leaderboard' },
 ];

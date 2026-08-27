@@ -7,6 +7,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { PlayPage } from './pages/PlayPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { CardsPage } from './pages/CardsPage';
+import { DecksPage } from './pages/DecksPage';
 import { ProfilePage } from './pages/ProfilePage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -32,6 +33,7 @@ export function App() {
         <Route path="/cards" element={<CardsPage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/play" element={<ProtectedRoute><PlayPage /></ProtectedRoute>} />
+        <Route path="/decks" element={<ProtectedRoute><DecksPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       </Route>
     </Routes>
