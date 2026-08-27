@@ -49,6 +49,7 @@ describe('e2e match flow (REST)', () => {
       throw new Error(
         `Backend not reachable at ${API} (${(err as Error).message}). ` +
           'Run via scripts/test-all.sh, which starts the backend automatically.',
+        { cause: err },
       );
     }
   });

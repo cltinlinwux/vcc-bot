@@ -15,7 +15,10 @@ export interface User {
   updatedAt: string;
 }
 
-export interface UserProfile extends Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl' | 'rating' | 'wins' | 'losses' | 'draws'> {}
+export type UserProfile = Pick<
+  User,
+  'id' | 'username' | 'displayName' | 'avatarUrl' | 'rating' | 'wins' | 'losses' | 'draws'
+>;
 
 export interface AuthTokens {
   accessToken: string;

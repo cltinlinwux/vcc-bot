@@ -2,6 +2,8 @@
 
 Online card battle game with Discord bot companion. Production-ready monorepo with real-time PvP, ranked matchmaking, and bot integration.
 
+Want to contribute? See [CONTRIBUTING.md](CONTRIBUTING.md) for dev setup and testing, and [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
+
 ## Stack
 
 - **Backend**: Node.js, Express, SQLite, Socket.io, JWT auth
@@ -11,9 +13,14 @@ Online card battle game with Discord bot companion. Production-ready monorepo wi
 
 ## Quick Start
 
+Requires Node.js 20 (see `.nvmrc`).
+
 ```bash
 # Install
 npm install
+
+# Configure environment (optional for local dev; required for production)
+cp .env.example .env
 
 # Setup database
 npm run db:migrate
@@ -48,9 +55,14 @@ Copy `.env.example` to `.env` and set `JWT_SECRET` before production deploy.
 ## Testing
 
 ```bash
-npm run test:all    # Full local test suite
+npm run test:all    # Full local test suite (build, unit, typecheck, smoke, e2e)
 npm test            # Unit tests only
+npm run typecheck   # Type-check all packages
+npm run lint        # ESLint
+npm run format      # Prettier write (format:check to verify)
 ```
+
+CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm run build`, and `npm run test:all` on every push and pull request.
 
 ## Project Structure
 
@@ -67,7 +79,9 @@ scripts/      Test and smoke scripts
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | /health | Health check |
+| GET | /health | Liveness check (status, uptime, version, timestamp) |
+| GET | /health/ready | Readiness check (verifies database connectivity) |
+| GET | /metrics | Operational counters (guarded by `METRICS_TOKEN` when set) |
 | POST | /api/auth/register | Create account |
 | POST | /api/auth/login | Login |
 | GET | /api/game/cards | Card catalog |
@@ -75,6 +89,10 @@ scripts/      Test and smoke scripts
 | POST | /api/game/queue/join | Join matchmaking |
 | POST | /api/bot/link-code | Generate bot link code |
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
-Private project.
+[MIT](LICENSE)

@@ -11,14 +11,21 @@
     "dev": "concurrently -n backend,frontend,bot -c blue,green,magenta \"npm run dev -w @vcc/backend\" \"npm run dev -w @vcc/frontend\" \"npm run dev -w @vcc/bot\"",
     "test": "npm run test --workspaces --if-present",
     "test:all": "bash scripts/test-all.sh",
-    "lint": "npm run lint --workspaces --if-present",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "db:migrate": "npm run db:migrate -w @vcc/backend",
     "db:seed": "npm run db:seed -w @vcc/backend"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "concurrently": "^9.1.2",
-    "typescript": "^5.7.3"
+    "eslint": "^10.9.1",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.6",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.68.0"
   },
   "engines": {
     "node": ">=20.0.0"
