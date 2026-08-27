@@ -3,7 +3,7 @@ import express from 'express';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { migrate } from './db/migrate.js';
-import { authRouter, gameRouter, botRouter } from './routes/index.js';
+import { authRouter, gameRouter, botRouter, healthRouter } from './routes/index.js';
 import { errorHandler } from './middleware/validate.js';
 
 export interface TestServer {
@@ -21,6 +21,7 @@ export async function startTestServer(): Promise<TestServer> {
 
   const app = express();
   app.use(express.json({ limit: '1mb' }));
+  app.use(healthRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/game', gameRouter);
   app.use('/api/bot', botRouter);

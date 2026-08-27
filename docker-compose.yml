@@ -11,6 +11,14 @@ services:
       - CORS_ORIGIN=http://localhost:3001
     volumes:
       - vcc-data:/app/packages/backend/data
+    healthcheck:
+      # 127.0.0.1 rather than localhost: busybox wget prefers ::1 (IPv6), but
+      # the Node server binds 0.0.0.0 (IPv4 only).
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/health/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     restart: unless-stopped
 
 volumes:

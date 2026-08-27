@@ -7,17 +7,14 @@ import { createServer } from 'node:http';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { authRouter, gameRouter, botRouter } from './routes/index.js';
+import { authRouter, gameRouter, botRouter, healthRouter } from './routes/index.js';
 import { errorHandler } from './middleware/validate.js';
 import { assertJwtSecret } from './middleware/auth.js';
 import { requestLogger } from './middleware/logging.js';
 import { setupWebSocket } from './ws/index.js';
 import { migrate } from './db/migrate.js';
-import { checkDatabase } from './db/client.js';
-import { APP_VERSION } from '@vcc/shared';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const startTime = Date.now();
 const isProduction = process.env.NODE_ENV === 'production';
 
 assertJwtSecret();
@@ -61,23 +58,8 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-app.get('/health', (_req, res) => {
-  const dbOk = checkDatabase();
-  res.status(dbOk ? 200 : 503).json({
-    status: dbOk ? 'ok' : 'degraded',
-    version: APP_VERSION,
-    uptime: Math.floor((Date.now() - startTime) / 1000),
-    checks: { database: dbOk },
-  });
-});
-
-app.get('/ready', (_req, res) => {
-  if (checkDatabase()) {
-    res.json({ ready: true });
-  } else {
-    res.status(503).json({ ready: false });
-  }
-});
+// Liveness (/health), readiness (/health/ready), and metrics (/metrics).
+app.use(healthRouter);
 
 app.use('/api/auth', authRouter);
 app.use('/api/game', gameRouter);
@@ -108,7 +90,7 @@ if (frontendDist) {
   console.log(`Serving frontend from ${frontendDist}`);
   app.use(express.static(frontendDist));
   app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/health') || req.path.startsWith('/ready')) {
+    if (req.path.startsWith('/api') || req.path.startsWith('/health') || req.path.startsWith('/metrics')) {
       next();
       return;
     }

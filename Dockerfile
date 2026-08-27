@@ -32,6 +32,6 @@ EXPOSE 3001
 # Use 127.0.0.1 rather than localhost: busybox wget prefers the ::1 (IPv6)
 # entry, but the Node server binds 0.0.0.0 (IPv4 only).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -qO- "http://127.0.0.1:${PORT:-3001}/health" || exit 1
+  CMD wget -qO- "http://127.0.0.1:${PORT:-3001}/health/ready" || exit 1
 
 CMD ["sh", "-c", "npm run db:migrate -w @vcc/backend && node packages/backend/dist/index.js"]

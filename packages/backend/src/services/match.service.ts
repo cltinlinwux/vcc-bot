@@ -12,6 +12,8 @@ import {
 import type { MatchHistoryEntry, MatchState } from '@vcc/shared';
 import { getDefaultDeck } from './deck.service.js';
 import { findUserById, updateRating } from './user.service.js';
+import { incrementMetric } from '../metrics.js';
+import { logLine } from '../middleware/logging.js';
 
 const activeMatches = new Map<string, InternalMatchState>();
 const matchQueue: string[] = [];
@@ -95,6 +97,9 @@ function startMatch(player1Id: string, player2Id: string): InternalMatchState {
     VALUES (?, ?, ?, ?, 'active', ?, ?)
   `).run(matchId, player1Id, player2Id, JSON.stringify(state), state.startedAt, new Date().toISOString());
 
+  incrementMetric('matchesStarted');
+  logLine('info', { event: 'match_started', matchId, players: [player1Id, player2Id] });
+
   return state;
 }
 
@@ -112,6 +117,7 @@ export function performAction(matchId: string, userId: string, action: GameActio
   if (!state) throw new Error('Match not found');
 
   const updated = applyAction(state, userId, action);
+  incrementMetric('commandsProcessed');
   activeMatches.set(matchId, updated);
 
   db.prepare('UPDATE matches SET state_json = ?, status = ? WHERE id = ?').run(
@@ -151,6 +157,9 @@ function finalizeMatch(state: InternalMatchState): void {
   `).run(state.winnerId, state.finishedAt, p1Change, p2Change, state.id);
 
   activeMatches.delete(state.id);
+
+  incrementMetric('matchesCompleted');
+  logLine('info', { event: 'match_completed', matchId: state.id, winnerId: state.winnerId });
 }
 
 export function getMatchHistory(userId: string, limit = 20): MatchHistoryEntry[] {
