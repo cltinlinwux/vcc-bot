@@ -16,9 +16,12 @@ RUN npm run build -w @vcc/shared
 RUN npm run build -w @vcc/backend
 RUN npm run build -w @vcc/frontend
 RUN npm run build -w @vcc/bot
+# Fail the build early if the frontend bundle is missing.
+RUN test -f /app/packages/frontend/dist/index.html
 
 FROM base AS production
 ENV NODE_ENV=production
+ENV FRONTEND_DIST=/app/packages/frontend/dist
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/packages ./packages
 COPY --from=build /app/package.json ./
