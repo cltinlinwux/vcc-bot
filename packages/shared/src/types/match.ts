@@ -1,5 +1,20 @@
+import type { CardElement, CardRarity } from './card.js';
+
 export type MatchStatus = 'waiting' | 'active' | 'finished' | 'cancelled';
 export type MatchResult = 'win' | 'loss' | 'draw';
+
+export interface BoardCard {
+  instanceId: string;
+  cardId: string;
+  name: string;
+  description: string;
+  rarity: CardRarity;
+  element: CardElement;
+  attack: number;
+  defense: number;
+  cost: number;
+  ability: string | null;
+}
 
 export interface MatchPlayer {
   userId: string;
@@ -7,7 +22,12 @@ export interface MatchPlayer {
   displayName: string;
   health: number;
   mana: number;
+  maxMana: number;
   deckRemaining: number;
+  handCount: number;
+  field: BoardCard[];
+  /** Only populated for the player viewing the state. */
+  hand?: BoardCard[];
 }
 
 export interface MatchState {

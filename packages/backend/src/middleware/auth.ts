@@ -15,14 +15,27 @@ declare global {
   }
 }
 
-function getJwtSecret(): string {
+const PLACEHOLDER_SECRETS = new Set([
+  'change-me-to-a-long-random-secret-in-production',
+  'dev-secret-not-for-production',
+]);
+
+/**
+ * Fails fast in production when JWT_SECRET is missing or still one of the
+ * known placeholder values. Called at startup so the server refuses to boot
+ * with a guessable signing key.
+ */
+export function assertJwtSecret(): void {
+  if (process.env.NODE_ENV !== 'production') return;
   const secret = process.env.JWT_SECRET;
-  if (!secret || secret === 'change-me-to-a-long-random-secret-in-production') {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('JWT_SECRET must be set in production');
-    }
+  if (!secret || PLACEHOLDER_SECRETS.has(secret)) {
+    throw new Error('JWT_SECRET must be set to a unique, random value in production');
   }
-  return secret ?? 'dev-secret-not-for-production';
+}
+
+function getJwtSecret(): string {
+  assertJwtSecret();
+  return process.env.JWT_SECRET ?? 'dev-secret-not-for-production';
 }
 
 export function signToken(payload: AuthPayload): string {

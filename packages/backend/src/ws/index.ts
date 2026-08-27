@@ -2,8 +2,33 @@ import type { Server as HttpServer } from 'node:http';
 import { Server } from 'socket.io';
 import { verifyToken } from '../middleware/auth.js';
 import { WS_EVENTS } from '@vcc/shared';
-import { joinQueue, leaveQueue, getPublicMatch, performAction } from '../services/match.service.js';
+import { toPlayerMatchState } from '@vcc/shared';
+import {
+  joinQueue,
+  leaveQueue,
+  getMatch,
+  getPlayerMatch,
+  performAction,
+  onMatchFound,
+} from '../services/match.service.js';
 import type { GameAction } from '@vcc/shared';
+
+function userRoom(userId: string): string {
+  return `user:${userId}`;
+}
+
+function emitMatchToPlayers(io: Server, matchId: string): void {
+  const internal = getMatch(matchId);
+  if (!internal) return;
+
+  for (const player of internal.players) {
+    const state = toPlayerMatchState(internal, player.userId);
+    io.to(userRoom(player.userId)).emit(WS_EVENTS.MATCH_STATE, state);
+    if (state.status === 'finished') {
+      io.to(userRoom(player.userId)).emit(WS_EVENTS.MATCH_RESULT, state);
+    }
+  }
+}
 
 export function setupWebSocket(httpServer: HttpServer): Server {
   const io = new Server(httpServer, {
@@ -11,6 +36,17 @@ export function setupWebSocket(httpServer: HttpServer): Server {
       origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
       methods: ['GET', 'POST'],
     },
+  });
+
+  onMatchFound(({ matchId, playerIds }) => {
+    for (const playerId of playerIds) {
+      io.in(userRoom(playerId)).socketsJoin(matchId);
+      const state = getPlayerMatch(matchId, playerId);
+      if (state) {
+        io.to(userRoom(playerId)).emit(WS_EVENTS.QUEUE_MATCHED, { matchId, state });
+        io.to(userRoom(playerId)).emit(WS_EVENTS.MATCH_STATE, state);
+      }
+    }
   });
 
   io.use((socket, next) => {
@@ -29,14 +65,11 @@ export function setupWebSocket(httpServer: HttpServer): Server {
 
   io.on('connection', (socket) => {
     const userId = socket.data.auth.userId as string;
+    socket.join(userRoom(userId));
 
     socket.on(WS_EVENTS.QUEUE_JOIN, () => {
       const result = joinQueue(userId);
-      if (result.matched && result.matchId && result.state) {
-        socket.join(result.matchId);
-        io.to(result.matchId).emit(WS_EVENTS.QUEUE_MATCHED, { matchId: result.matchId, state: result.state });
-        io.to(result.matchId).emit(WS_EVENTS.MATCH_STATE, result.state);
-      } else {
+      if (!result.matched) {
         socket.emit(WS_EVENTS.QUEUE_JOIN, { queued: true });
       }
     });
@@ -47,7 +80,7 @@ export function setupWebSocket(httpServer: HttpServer): Server {
     });
 
     socket.on(WS_EVENTS.MATCH_JOIN, (matchId: string) => {
-      const state = getPublicMatch(matchId);
+      const state = getPlayerMatch(matchId, userId);
       if (!state) {
         socket.emit(WS_EVENTS.ERROR, { message: 'Match not found' });
         return;
@@ -63,18 +96,18 @@ export function setupWebSocket(httpServer: HttpServer): Server {
 
     socket.on(WS_EVENTS.MATCH_ACTION, (payload: { matchId: string; action: GameAction }) => {
       try {
-        const state = performAction(payload.matchId, userId, payload.action);
-        io.to(payload.matchId).emit(WS_EVENTS.MATCH_STATE, state);
-        if (state.status === 'finished') {
-          io.to(payload.matchId).emit(WS_EVENTS.MATCH_RESULT, state);
-        }
+        performAction(payload.matchId, userId, payload.action);
+        emitMatchToPlayers(io, payload.matchId);
       } catch (err) {
         socket.emit(WS_EVENTS.ERROR, { message: (err as Error).message });
       }
     });
 
     socket.on('disconnect', () => {
-      leaveQueue(userId);
+      const remaining = io.sockets.adapter.rooms.get(userRoom(userId));
+      if (!remaining || remaining.size === 0) {
+        leaveQueue(userId);
+      }
     });
   });
 

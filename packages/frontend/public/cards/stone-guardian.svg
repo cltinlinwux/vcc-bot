@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Stone Guardian">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a2234"/>
+      <stop offset="1" stop-color="#0a0e17"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.55">
+      <stop offset="0" stop-color="#84cc16" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#84cc16" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a3e635"/>
+      <stop offset="1" stop-color="#4d7c0f"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <rect width="400" height="300" fill="url(#glow)"/>
+  <!-- hexagonal stone plates -->
+  <path d="M200 46 L262 82 L262 154 L200 190 L138 154 L138 82 Z"
+        fill="none" stroke="url(#stone)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M200 70 L242 94 L242 142 L200 166 L158 142 L158 94 Z"
+        fill="#84cc16" opacity="0.14"/>
+  <path d="M200 94 L222 106 L222 130 L200 142 L178 130 L178 106 Z"
+        fill="url(#stone)"/>
+  <!-- fracture lines -->
+  <path d="M200 46 L200 70 M262 82 L242 94 M262 154 L242 142 M200 190 L200 166 M138 154 L158 142 M138 82 L158 94"
+        stroke="#84cc16" stroke-width="2.5" opacity="0.55"/>
+  <!-- base plinth -->
+  <path d="M120 232 L152 208 L248 208 L280 232 Z" fill="#84cc16" opacity="0.2"/>
+  <path d="M120 232 L152 208 L248 208 L280 232 Z" fill="none" stroke="#84cc16" stroke-width="3" stroke-linejoin="round" opacity="0.7"/>
+  <path d="M100 252 L340 252" stroke="#4d7c0f" stroke-width="3" opacity="0.5" transform="translate(-20 0)"/>
+  <!-- pebbles -->
+  <path d="M84 246 L94 238 L104 246 L94 252 Z" fill="#a3e635" opacity="0.5"/>
+  <path d="M304 244 L316 236 L328 244 L316 250 Z" fill="#a3e635" opacity="0.4"/>
+  <!-- frame -->
+  <rect x="10" y="10" width="380" height="280" fill="none" stroke="#84cc16" stroke-opacity="0.35" stroke-width="2" rx="10"/>
+  <path d="M22 40 L22 22 L40 22" fill="none" stroke="#84cc16" stroke-width="3"/>
+  <path d="M360 22 L378 22 L378 40" fill="none" stroke="#84cc16" stroke-width="3"/>
+  <path d="M378 260 L378 278 L360 278" fill="none" stroke="#84cc16" stroke-width="3"/>
+  <path d="M40 278 L22 278 L22 260" fill="none" stroke="#84cc16" stroke-width="3"/>
+</svg>

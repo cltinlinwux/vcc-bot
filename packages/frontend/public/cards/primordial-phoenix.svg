@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Primordial Phoenix">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a2234"/>
+      <stop offset="1" stop-color="#0a0e17"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.45">
+      <stop offset="0" stop-color="#ef4444" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#ef4444" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <rect width="400" height="300" fill="url(#glow)"/>
+  <polygon points="200,70 280,230 120,230" fill="none" stroke="#ef4444" stroke-width="4" opacity="0.8"/>
+  <circle cx="200" cy="150" r="40" fill="#ef4444" opacity="0.15" stroke="#ef4444" stroke-width="3"/>
+  <rect x="10" y="10" width="380" height="280" fill="none" stroke="#ef4444" stroke-opacity="0.35" stroke-width="2" rx="10"/>
+</svg>

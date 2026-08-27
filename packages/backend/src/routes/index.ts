@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.js';
 import { validateBody } from '../middleware/validate.js';
-import { registerSchema, loginSchema, createDeckSchema, linkBotSchema } from '../schemas/index.js';
+import { linkCodeLimiter } from '../middleware/rateLimits.js';
+import { registerSchema, loginSchema, createDeckSchema, linkBotSchema, botQueueJoinSchema } from '../schemas/index.js';
 import {
   createUser,
   findUserByEmail,
@@ -14,7 +15,7 @@ import {
 import { signToken } from '../middleware/auth.js';
 import { createDeck, createStarterDeck, getUserDecks } from '../services/deck.service.js';
 import { joinQueue, leaveQueue, getMatchHistory } from '../services/match.service.js';
-import { generateLinkCode, linkBotAccount, getUserBotLinks } from '../services/bot.service.js';
+import { generateLinkCode, linkBotAccount, getUserBotLinks, findBotLink } from '../services/bot.service.js';
 import { getStarterDeck, CARD_DEFINITIONS } from '@vcc/shared';
 
 export const authRouter = Router();
@@ -119,7 +120,7 @@ botRouter.post('/link-code', authMiddleware, (req, res) => {
   res.json({ data: { code, expiresInMinutes: 15 } });
 });
 
-botRouter.post('/link', validateBody(linkBotSchema), (req, res) => {
+botRouter.post('/link', linkCodeLimiter, validateBody(linkBotSchema), (req, res) => {
   try {
     const link = linkBotAccount(req.body);
     res.json({ data: link });
@@ -130,4 +131,43 @@ botRouter.post('/link', validateBody(linkBotSchema), (req, res) => {
 
 botRouter.get('/links', authMiddleware, (req, res) => {
   res.json({ data: getUserBotLinks(req.auth!.userId) });
+});
+
+const BOT_PLATFORMS = ['discord', 'telegram'] as const;
+
+function isBotPlatform(value: string): value is (typeof BOT_PLATFORMS)[number] {
+  return (BOT_PLATFORMS as readonly string[]).includes(value);
+}
+
+botRouter.get('/user/:platform/:platformUserId', (req, res) => {
+  const { platform, platformUserId } = req.params;
+  if (!isBotPlatform(platform)) {
+    res.status(400).json({ error: `Invalid platform. Must be one of: ${BOT_PLATFORMS.join(', ')}`, code: 'INVALID_PLATFORM' });
+    return;
+  }
+
+  const link = findBotLink(platform, platformUserId);
+  if (!link) {
+    res.status(404).json({ error: 'No linked account for this platform user', code: 'NOT_LINKED' });
+    return;
+  }
+
+  const user = findUserById(link.userId);
+  if (!user) {
+    res.status(404).json({ error: 'User not found', code: 'USER_NOT_FOUND' });
+    return;
+  }
+
+  res.json({ data: { ...toProfile(user), platformUsername: link.platformUsername, linkedAt: link.linkedAt } });
+});
+
+botRouter.post('/queue/join', validateBody(botQueueJoinSchema), (req, res) => {
+  const link = findBotLink(req.body.platform, req.body.platformUserId);
+  if (!link) {
+    res.status(404).json({ error: 'No linked account for this platform user', code: 'NOT_LINKED' });
+    return;
+  }
+
+  const result = joinQueue(link.userId);
+  res.json({ data: result });
 });

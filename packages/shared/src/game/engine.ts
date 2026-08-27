@@ -8,7 +8,7 @@ import {
 } from '../types/card.js';
 import { getCard, CARD_MAP } from './cards.js';
 import type { CardDefinition } from '../types/card.js';
-import type { MatchPlayer, MatchState, MatchStatus } from '../types/match.js';
+import type { BoardCard, MatchPlayer, MatchState, MatchStatus } from '../types/match.js';
 
 export interface GameCard {
   instanceId: string;
@@ -271,6 +271,22 @@ export function applyAction(state: InternalMatchState, userId: string, action: G
   return state;
 }
 
+function toBoardCard(card: GameCard): BoardCard {
+  const { name, description, rarity, element, attack, defense, cost, ability } = card.definition;
+  return {
+    instanceId: card.instanceId,
+    cardId: card.cardId,
+    name,
+    description,
+    rarity,
+    element,
+    attack,
+    defense,
+    cost,
+    ability,
+  };
+}
+
 export function toPublicMatchState(state: InternalMatchState): MatchState {
   const toPlayer = (p: PlayerState): MatchPlayer => ({
     userId: p.userId,
@@ -278,7 +294,10 @@ export function toPublicMatchState(state: InternalMatchState): MatchState {
     displayName: p.displayName,
     health: p.health,
     mana: p.mana,
+    maxMana: p.maxMana,
     deckRemaining: p.deck.length,
+    handCount: p.hand.length,
+    field: p.field.map(toBoardCard),
   });
 
   return {
@@ -291,6 +310,16 @@ export function toPublicMatchState(state: InternalMatchState): MatchState {
     startedAt: state.startedAt,
     finishedAt: state.finishedAt,
   };
+}
+
+/** Public match state augmented with the hand of the viewing player only. */
+export function toPlayerMatchState(state: InternalMatchState, viewerUserId: string): MatchState {
+  const publicState = toPublicMatchState(state);
+  const viewerIdx = state.players.findIndex((p) => p.userId === viewerUserId);
+  if (viewerIdx !== -1) {
+    publicState.players[viewerIdx as 0 | 1].hand = state.players[viewerIdx as 0 | 1].hand.map(toBoardCard);
+  }
+  return publicState;
 }
 
 export function calculateRatingChange(winnerRating: number, loserRating: number, isDraw = false): { winnerChange: number; loserChange: number } {

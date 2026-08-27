@@ -57,8 +57,14 @@ export function CardsPage() {
           {filtered.map((card) => (
             <div
               key={card.id}
-              className={`card-surface border-l-4 ${elementColors[card.element]?.split(' ')[0] ?? 'border-vcc-border'} hover:scale-[1.02] transition-transform`}
+              className={`card-surface border-l-4 ${elementColors[card.element]?.split(' ')[0] ?? 'border-vcc-border'} hover:scale-[1.02] transition-transform overflow-hidden`}
             >
+              <img
+                src={card.imageUrl}
+                alt={card.name}
+                className="w-full h-32 object-cover rounded-lg mb-3 bg-vcc-surface"
+                loading="lazy"
+              />
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-display font-bold">{card.name}</h3>
                 <span className={`text-xs font-medium capitalize ${rarityColors[card.rarity]}`}>{card.rarity}</span>

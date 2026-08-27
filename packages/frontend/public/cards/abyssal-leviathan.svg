@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Abyssal Leviathan">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="1" stop-color="#050810"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.55" r="0.6">
+      <stop offset="0" stop-color="#3b82f6" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="coil" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1d4ed8"/>
+      <stop offset="0.5" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#93c5fd"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <rect width="400" height="300" fill="url(#glow)"/>
+  <!-- abyssal depth bands -->
+  <path d="M0 60 H400" stroke="#3b82f6" stroke-width="1.5" opacity="0.2"/>
+  <path d="M0 110 H400" stroke="#3b82f6" stroke-width="1.5" opacity="0.14"/>
+  <path d="M0 160 H400" stroke="#3b82f6" stroke-width="1.5" opacity="0.1"/>
+  <!-- serpent coil: undulating body -->
+  <path d="M56 210 Q108 120 160 190 T264 190 T344 130"
+        fill="none" stroke="url(#coil)" stroke-width="18" stroke-linecap="round"/>
+  <path d="M56 210 Q108 120 160 190 T264 190 T344 130"
+        fill="none" stroke="#0a0e17" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 22" opacity="0.6"/>
+  <!-- dorsal fins -->
+  <path d="M104 158 L118 122 L132 154 Z" fill="#60a5fa" opacity="0.85"/>
+  <path d="M204 176 L218 140 L232 172 Z" fill="#60a5fa" opacity="0.85"/>
+  <path d="M296 160 L312 126 L324 156 Z" fill="#60a5fa" opacity="0.85"/>
+  <!-- head with gold eye (legendary) -->
+  <path d="M344 130 L378 112 L366 136 L378 152 Z" fill="#3b82f6"/>
+  <circle cx="356" cy="130" r="4" fill="#fbbf24"/>
+  <!-- tail fluke -->
+  <path d="M56 210 L30 190 L44 214 L28 232 Z" fill="#1d4ed8"/>
+  <!-- rising bubbles -->
+  <circle cx="120" cy="86" r="4" fill="none" stroke="#93c5fd" stroke-width="2" opacity="0.6"/>
+  <circle cx="238" cy="104" r="3" fill="none" stroke="#93c5fd" stroke-width="2" opacity="0.5"/>
+  <circle cx="300" cy="70" r="5" fill="none" stroke="#93c5fd" stroke-width="2" opacity="0.4"/>
+  <!-- legendary gold-tinged frame -->
+  <rect x="10" y="10" width="380" height="280" fill="none" stroke="#3b82f6" stroke-opacity="0.4" stroke-width="2" rx="10"/>
+  <path d="M22 40 L22 22 L40 22" fill="none" stroke="#fbbf24" stroke-width="3"/>
+  <path d="M360 22 L378 22 L378 40" fill="none" stroke="#fbbf24" stroke-width="3"/>
+  <path d="M378 260 L378 278 L360 278" fill="none" stroke="#fbbf24" stroke-width="3"/>
+  <path d="M40 278 L22 278 L22 260" fill="none" stroke="#fbbf24" stroke-width="3"/>
+</svg>

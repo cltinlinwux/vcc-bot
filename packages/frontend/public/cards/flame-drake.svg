@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Flame Drake">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a2234"/>
+      <stop offset="1" stop-color="#0a0e17"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.55">
+      <stop offset="0" stop-color="#ef4444" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#ef4444" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wing" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#ef4444"/>
+      <stop offset="1" stop-color="#fbbf24"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <rect width="400" height="300" fill="url(#glow)"/>
+  <!-- left wing: angular membrane -->
+  <path d="M186 202 L82 92 L128 128 L118 74 L154 122 L162 62 L186 120 Z"
+        fill="url(#wing)" opacity="0.85"/>
+  <!-- right wing mirrored -->
+  <path d="M214 202 L318 92 L272 128 L282 74 L246 122 L238 62 L214 120 Z"
+        fill="url(#wing)" opacity="0.85"/>
+  <!-- body: sharp diamond with head -->
+  <path d="M200 96 L226 168 L200 246 L174 168 Z" fill="#ef4444"/>
+  <path d="M200 96 L212 128 L200 148 L188 128 Z" fill="#fbbf24"/>
+  <!-- eyes -->
+  <circle cx="192" cy="116" r="3" fill="#0a0e17"/>
+  <circle cx="208" cy="116" r="3" fill="#0a0e17"/>
+  <!-- breath sparks -->
+  <path d="M200 252 L206 266 L200 262 L194 266 Z" fill="#f97316" opacity="0.8"/>
+  <circle cx="120" cy="212" r="2.5" fill="#fbbf24" opacity="0.6"/>
+  <circle cx="284" cy="208" r="2.5" fill="#f97316" opacity="0.6"/>
+  <!-- frame -->
+  <rect x="10" y="10" width="380" height="280" fill="none" stroke="#ef4444" stroke-opacity="0.35" stroke-width="2" rx="10"/>
+  <path d="M22 40 L22 22 L40 22" fill="none" stroke="#ef4444" stroke-width="3"/>
+  <path d="M360 22 L378 22 L378 40" fill="none" stroke="#ef4444" stroke-width="3"/>
+  <path d="M378 260 L378 278 L360 278" fill="none" stroke="#ef4444" stroke-width="3"/>
+  <path d="M40 278 L22 278 L22 260" fill="none" stroke="#ef4444" stroke-width="3"/>
+</svg>

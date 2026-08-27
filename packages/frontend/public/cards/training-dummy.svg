@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Training Dummy">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a2234"/>
+      <stop offset="1" stop-color="#0a0e17"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.45" r="0.5">
+      <stop offset="0" stop-color="#a855f7" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#a855f7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <rect width="400" height="300" fill="url(#glow)"/>
+  <!-- post and crossbar -->
+  <rect x="194" y="70" width="12" height="176" rx="4" fill="#2d3a52"/>
+  <rect x="130" y="120" width="140" height="10" rx="4" fill="#2d3a52"/>
+  <path d="M160 246 L240 246 L252 258 L148 258 Z" fill="#2d3a52"/>
+  <!-- target board -->
+  <circle cx="200" cy="118" r="52" fill="#111827" stroke="#a855f7" stroke-width="4"/>
+  <circle cx="200" cy="118" r="34" fill="none" stroke="#c084fc" stroke-width="3" opacity="0.8"/>
+  <circle cx="200" cy="118" r="17" fill="none" stroke="#c084fc" stroke-width="3" opacity="0.6"/>
+  <circle cx="200" cy="118" r="6" fill="#a855f7"/>
+  <!-- practice strike marks -->
+  <path d="M162 92 L174 104 M174 92 L162 104" stroke="#c084fc" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+  <path d="M228 136 L240 148 M240 136 L228 148" stroke="#c084fc" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+  <!-- straw tufts -->
+  <path d="M182 200 L172 216 M200 202 L200 220 M218 200 L228 216" stroke="#7c3aed" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+  <!-- frame -->
+  <rect x="10" y="10" width="380" height="280" fill="none" stroke="#a855f7" stroke-opacity="0.3" stroke-width="2" rx="10"/>
+  <path d="M22 40 L22 22 L40 22" fill="none" stroke="#a855f7" stroke-width="3"/>
+  <path d="M360 22 L378 22 L378 40" fill="none" stroke="#a855f7" stroke-width="3"/>
+  <path d="M378 260 L378 278 L360 278" fill="none" stroke="#a855f7" stroke-width="3"/>
+  <path d="M40 278 L22 278 L22 260" fill="none" stroke="#a855f7" stroke-width="3"/>
+</svg>

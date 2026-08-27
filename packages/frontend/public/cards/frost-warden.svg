@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Frost Warden">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a2234"/>
+      <stop offset="1" stop-color="#0a0e17"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#3b82f6" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <rect width="400" height="300" fill="url(#glow)"/>
+  <!-- snowflake: six crystal arms -->
+  <g stroke="#60a5fa" stroke-width="5" stroke-linecap="round">
+    <path d="M200 150 L200 60"/>
+    <path d="M200 150 L278 105"/>
+    <path d="M200 150 L278 195"/>
+    <path d="M200 150 L200 240"/>
+    <path d="M200 150 L122 195"/>
+    <path d="M200 150 L122 105"/>
+  </g>
+  <!-- arm barbs -->
+  <g stroke="#93c5fd" stroke-width="3" stroke-linecap="round" opacity="0.85">
+    <path d="M200 84 L186 70 M200 84 L214 70"/>
+    <path d="M257 117 L252 98 M257 117 L271 131"/>
+    <path d="M257 183 L271 169 M257 183 L252 202"/>
+    <path d="M200 216 L186 230 M200 216 L214 230"/>
+    <path d="M143 183 L148 202 M143 183 L129 169"/>
+    <path d="M143 117 L129 131 M143 117 L148 98"/>
+  </g>
+  <!-- crystal tips -->
+  <g fill="#93c5fd">
+    <path d="M200 46 L208 60 L200 68 L192 60 Z"/>
+    <path d="M290 98 L292 114 L282 118 L278 105 Z"/>
+    <path d="M290 202 L278 195 L282 182 L292 186 Z"/>
+    <path d="M200 254 L192 240 L200 232 L208 240 Z"/>
+    <path d="M110 202 L108 186 L118 182 L122 195 Z"/>
+    <path d="M110 98 L122 105 L118 118 L108 114 Z"/>
+  </g>
+  <!-- hexagonal core -->
+  <path d="M200 128 L219 139 L219 161 L200 172 L181 161 L181 139 Z"
+        fill="#3b82f6" stroke="#93c5fd" stroke-width="3"/>
+  <!-- frame -->
+  <rect x="10" y="10" width="380" height="280" fill="none" stroke="#3b82f6" stroke-opacity="0.35" stroke-width="2" rx="10"/>
+  <path d="M22 40 L22 22 L40 22" fill="none" stroke="#3b82f6" stroke-width="3"/>
+  <path d="M360 22 L378 22 L378 40" fill="none" stroke="#3b82f6" stroke-width="3"/>
+  <path d="M378 260 L378 278 L360 278" fill="none" stroke="#3b82f6" stroke-width="3"/>
+  <path d="M40 278 L22 278 L22 260" fill="none" stroke="#3b82f6" stroke-width="3"/>
+</svg>

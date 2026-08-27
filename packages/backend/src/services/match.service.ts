@@ -4,6 +4,7 @@ import {
   createMatch,
   applyAction,
   toPublicMatchState,
+  toPlayerMatchState,
   calculateRatingChange,
   type InternalMatchState,
   type GameAction,
@@ -15,7 +16,33 @@ import { findUserById, updateRating } from './user.service.js';
 const activeMatches = new Map<string, InternalMatchState>();
 const matchQueue: string[] = [];
 
-export function joinQueue(userId: string): { matched: boolean; matchId?: string; state?: MatchState } {
+export interface MatchFoundEvent {
+  matchId: string;
+  playerIds: [string, string];
+}
+
+export interface QueueJoinResult {
+  matched: boolean;
+  matchId?: string;
+  state?: MatchState;
+  playerIds?: [string, string];
+}
+
+type MatchFoundListener = (event: MatchFoundEvent) => void;
+
+const matchFoundListeners = new Set<MatchFoundListener>();
+
+/**
+ * Register a listener invoked whenever a queue join results in a match,
+ * regardless of which transport (REST or WebSocket) triggered it.
+ * Returns an unsubscribe function.
+ */
+export function onMatchFound(listener: MatchFoundListener): () => void {
+  matchFoundListeners.add(listener);
+  return () => matchFoundListeners.delete(listener);
+}
+
+export function joinQueue(userId: string): QueueJoinResult {
   if (matchQueue.includes(userId)) {
     return { matched: false };
   }
@@ -24,7 +51,16 @@ export function joinQueue(userId: string): { matched: boolean; matchId?: string;
   if (waiting) {
     matchQueue.splice(matchQueue.indexOf(waiting), 1);
     const match = startMatch(waiting, userId);
-    return { matched: true, matchId: match.id, state: toPublicMatchState(match) };
+    const event: MatchFoundEvent = { matchId: match.id, playerIds: [waiting, userId] };
+    for (const listener of matchFoundListeners) {
+      listener(event);
+    }
+    return {
+      matched: true,
+      matchId: match.id,
+      state: toPublicMatchState(match),
+      playerIds: event.playerIds,
+    };
   }
 
   matchQueue.push(userId);
@@ -66,12 +102,12 @@ export function getMatch(matchId: string): InternalMatchState | null {
   return activeMatches.get(matchId) ?? null;
 }
 
-export function getPublicMatch(matchId: string): MatchState | null {
+export function getPlayerMatch(matchId: string, viewerUserId: string): MatchState | null {
   const state = activeMatches.get(matchId);
-  return state ? toPublicMatchState(state) : null;
+  return state ? toPlayerMatchState(state, viewerUserId) : null;
 }
 
-export function performAction(matchId: string, userId: string, action: GameAction): MatchState {
+export function performAction(matchId: string, userId: string, action: GameAction): InternalMatchState {
   const state = activeMatches.get(matchId);
   if (!state) throw new Error('Match not found');
 
@@ -88,7 +124,7 @@ export function performAction(matchId: string, userId: string, action: GameActio
     finalizeMatch(updated);
   }
 
-  return toPublicMatchState(updated);
+  return updated;
 }
 
 function finalizeMatch(state: InternalMatchState): void {

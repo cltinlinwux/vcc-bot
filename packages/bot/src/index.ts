@@ -12,18 +12,22 @@ import { BOT_COMMANDS, APP_FULL_NAME } from '@vcc/shared';
 
 const API_URL = process.env.VITE_API_URL ?? 'http://localhost:3001';
 
-async function apiCall<T>(path: string, options: { method?: string; body?: unknown } = {}): Promise<T | null> {
+type ApiResult<T> = { ok: true; data: T } | { ok: false; code: string; error: string };
+
+async function apiCall<T>(path: string, options: { method?: string; body?: unknown } = {}): Promise<ApiResult<T>> {
   try {
     const res = await fetch(`${API_URL}${path}`, {
       method: options.method ?? 'GET',
       headers: { 'Content-Type': 'application/json' },
       body: options.body ? JSON.stringify(options.body) : undefined,
     });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.data as T;
+    const json = (await res.json().catch(() => null)) as { data?: T; error?: string; code?: string } | null;
+    if (!res.ok) {
+      return { ok: false, code: json?.code ?? 'HTTP_ERROR', error: json?.error ?? `Request failed (${res.status})` };
+    }
+    return { ok: true, data: json?.data as T };
   } catch {
-    return null;
+    return { ok: false, code: 'NETWORK_ERROR', error: 'Could not reach the VCC API' };
   }
 }
 
@@ -51,19 +55,84 @@ async function handleLink(interaction: ChatInputCommandInteraction): Promise<voi
     },
   });
 
-  if (result) {
+  if (result.ok) {
     await interaction.reply({ content: 'Account linked successfully! Use /play to join matches.', ephemeral: true });
   } else {
     await interaction.reply({ content: 'Link failed. Check your code and try again.', ephemeral: true });
   }
 }
 
+export async function handlePlay(interaction: ChatInputCommandInteraction): Promise<void> {
+  const result = await apiCall<{ matched: boolean; matchId?: string }>('/api/bot/queue/join', {
+    method: 'POST',
+    body: { platform: 'discord', platformUserId: interaction.user.id },
+  });
+
+  if (!result.ok) {
+    const content =
+      result.code === 'NOT_LINKED'
+        ? 'Your Discord account is not linked yet. Get a code from your profile page and use /link <code>.'
+        : `Could not join the queue: ${result.error}`;
+    await interaction.reply({ content, ephemeral: true });
+    return;
+  }
+
+  if (result.data.matched) {
+    await interaction.reply({
+      content: `Match found! Open the web app to play now. Match ID: \`${result.data.matchId}\``,
+      ephemeral: true,
+    });
+  } else {
+    await interaction.reply({
+      content: 'You are in the matchmaking queue. You will be matched as soon as an opponent joins — keep the web app open.',
+      ephemeral: true,
+    });
+  }
+}
+
+export async function handleStats(interaction: ChatInputCommandInteraction): Promise<void> {
+  const result = await apiCall<{
+    displayName: string;
+    username: string;
+    rating: number;
+    wins: number;
+    losses: number;
+    draws: number;
+  }>(`/api/bot/user/discord/${interaction.user.id}`);
+
+  if (!result.ok) {
+    const content =
+      result.code === 'NOT_LINKED'
+        ? 'Your Discord account is not linked yet. Get a code from your profile page and use /link <code>.'
+        : `Could not fetch stats: ${result.error}`;
+    await interaction.reply({ content, ephemeral: true });
+    return;
+  }
+
+  const stats = result.data;
+  const totalGames = stats.wins + stats.losses + stats.draws;
+  const winRate = totalGames > 0 ? Math.round((stats.wins / totalGames) * 100) : 0;
+
+  const embed = new EmbedBuilder()
+    .setTitle(`${APP_FULL_NAME} — ${stats.displayName}`)
+    .setColor(0x22c55e)
+    .addFields(
+      { name: 'Rating', value: `${stats.rating}`, inline: true },
+      { name: 'Wins', value: `${stats.wins}`, inline: true },
+      { name: 'Losses', value: `${stats.losses}`, inline: true },
+      { name: 'Draws', value: `${stats.draws}`, inline: true },
+      { name: 'Win rate', value: `${winRate}%`, inline: true },
+    );
+
+  await interaction.reply({ embeds: [embed], ephemeral: true });
+}
+
 async function handleLeaderboard(interaction: ChatInputCommandInteraction): Promise<void> {
-  const entries = await apiCall<{ rank: number; displayName: string; rating: number; wins: number; losses: number }[]>(
+  const result = await apiCall<{ rank: number; displayName: string; rating: number; wins: number; losses: number }[]>(
     '/api/game/leaderboard',
   );
 
-  if (!entries || entries.length === 0) {
+  if (!result.ok || result.data.length === 0) {
     await interaction.reply('No players on the leaderboard yet.');
     return;
   }
@@ -72,7 +141,7 @@ async function handleLeaderboard(interaction: ChatInputCommandInteraction): Prom
     .setTitle(`${APP_FULL_NAME} — Leaderboard`)
     .setColor(0xfbbf24)
     .setDescription(
-      entries.slice(0, 10).map((e) => `#${e.rank} **${e.displayName}** — ${e.rating} (${e.wins}W/${e.losses}L)`).join('\n'),
+      result.data.slice(0, 10).map((e) => `#${e.rank} **${e.displayName}** — ${e.rating} (${e.wins}W/${e.losses}L)`).join('\n'),
     );
 
   await interaction.reply({ embeds: [embed] });
@@ -116,10 +185,10 @@ export async function startBot(): Promise<void> {
         await handleLink(interaction);
         break;
       case BOT_COMMANDS.PLAY:
-        await interaction.reply({ content: 'Queue joined! Open the web app to play your match.', ephemeral: true });
+        await handlePlay(interaction);
         break;
       case BOT_COMMANDS.STATS:
-        await interaction.reply({ content: 'Link your account first with /link to view stats.', ephemeral: true });
+        await handleStats(interaction);
         break;
       case BOT_COMMANDS.LEADERBOARD:
         await handleLeaderboard(interaction);

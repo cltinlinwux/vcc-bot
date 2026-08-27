@@ -7,7 +7,11 @@ export const registerSchema = z.object({
     .max(20)
     .regex(/^[a-zA-Z0-9_]+$/, 'Username must be alphanumeric'),
   email: z.string().email(),
-  password: z.string().min(8).max(128),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128)
+    .regex(/\d/, 'Password must contain at least one number'),
   displayName: z.string().min(1).max(50).optional(),
 });
 
@@ -31,4 +35,9 @@ export const linkBotSchema = z.object({
   platform: z.enum(['discord', 'telegram']),
   platformUserId: z.string(),
   platformUsername: z.string(),
+});
+
+export const botQueueJoinSchema = z.object({
+  platform: z.enum(['discord', 'telegram']),
+  platformUserId: z.string().min(1),
 });

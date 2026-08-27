@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { ZodError, type ZodSchema } from 'zod';
+import { logLine } from './logging.js';
 
 export function validateBody<T>(schema: ZodSchema<T>) {
   return (req: Request, res: Response, next: NextFunction): void => {
@@ -22,7 +23,13 @@ export function validateBody<T>(schema: ZodSchema<T>) {
   };
 }
 
-export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
-  console.error('[error]', err.message);
+export function errorHandler(err: Error, req: Request, res: Response, _next: NextFunction): void {
+  logLine('error', {
+    requestId: req.id,
+    method: req.method,
+    path: req.originalUrl.split('?')[0],
+    message: err.message,
+    stack: err.stack,
+  });
   res.status(500).json({ error: 'Internal server error', code: 'INTERNAL_ERROR' });
 }
