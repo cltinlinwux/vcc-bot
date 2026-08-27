@@ -62,7 +62,7 @@ export function CardsPage() {
               <img
                 src={card.imageUrl}
                 alt={card.name}
-                className="w-full h-32 object-cover rounded-lg mb-3 bg-vcc-surface"
+                className="w-full aspect-[4/3] object-cover rounded-lg mb-3 bg-vcc-surface"
                 loading="lazy"
               />
               <div className="flex justify-between items-start mb-2">
