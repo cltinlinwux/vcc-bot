@@ -9,7 +9,8 @@
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "DATABASE_URL=file:/tmp/vcc-backend-test.db?mode=memory&cache=shared node --import tsx --test src/security.test.ts src/auth.test.ts src/game.test.ts src/routes/bot.routes.test.ts src/ws/matchmaking.test.ts src/services/user.service.test.ts",
+    "test": "node --import tsx --test \"src/**/*.test.ts\"",
+    "test:coverage": "node --import tsx --test --experimental-test-coverage \"src/**/*.test.ts\"",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts"
   },

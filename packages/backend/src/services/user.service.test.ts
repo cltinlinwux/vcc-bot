@@ -1,3 +1,4 @@
+import '../test-setup.js';
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { migrate } from '../db/migrate.js';
